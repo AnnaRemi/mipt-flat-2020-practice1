@@ -210,7 +210,7 @@ public:
                 cout << k;
                 return;
             } if (subsidiary_object.bestSubstringLen >= k) {
-                cout << counter;
+                cout << subsidiary_object.bestSubstringLen;
                 return;
             } else {
                 cout << "INF";
