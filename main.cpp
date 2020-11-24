@@ -19,24 +19,24 @@ class Parsing_Tree {
 private:
     bool exit_cycle;
     bool epsilon;
-    int bestPrefixLen;
-    int bestSuffixLen;
-    int bestXwayLength;
-    int bestSubstringLen;
+    int PrefixLen;
+    int SuffixLen;
+    int SymbolWayLen;
+    int SubstringLen;
 public:
     explicit Parsing_Tree(int a) {
-        exit_cycle = epsilon = bestPrefixLen = bestXwayLength = bestSuffixLen = bestSubstringLen = 0;
+        exit_cycle = epsilon = PrefixLen = SymbolWayLen = SuffixLen = SubstringLen = 0;
     }
 
     void reload(int a) {
-        exit_cycle = epsilon = bestPrefixLen = bestSuffixLen = bestXwayLength = bestSubstringLen = a;
+        exit_cycle = epsilon = PrefixLen = SuffixLen = SymbolWayLen = SubstringLen = a;
     }
 
 /*
 *In "parse" function we iterate the input expression.
-*If the meeting is in line letter, we incriminating all field structure,
-*so how did the prefix, suffix, and subword consisting of letters.
-*If we met '1' - we incriminate the flag with an empty word and put a structure with information about the letter in the stack
+*If the symbol met in line is letter, we increment all field structures,
+*as well as prefix, suffix, and subword consisting of letters.
+*If we met '1' - we increment the flag with an empty word and put a structure with information about the letter in the stack
 *We also have ancillary functions which helps us to parse operators
 */
 
@@ -80,17 +80,17 @@ public:
                         first_element = S.top();
                         S.pop();
 
-                        subsidiary_object.bestSubstringLen =
-                                max(first_element.bestSubstringLen, second_element.bestSubstringLen);
+                        subsidiary_object.SubstringLen =
+                                max(first_element.SubstringLen, second_element.SubstringLen);
 
-                        subsidiary_object.bestSuffixLen =
-                                max(first_element.bestSuffixLen, second_element.bestSuffixLen);
+                        subsidiary_object.SuffixLen =
+                                max(first_element.SuffixLen, second_element.SuffixLen);
 
-                        subsidiary_object.bestPrefixLen =
-                                max(first_element.bestPrefixLen, second_element.bestPrefixLen);
+                        subsidiary_object.PrefixLen =
+                                max(first_element.PrefixLen, second_element.PrefixLen);
 
-                        subsidiary_object.bestXwayLength =
-                                max(first_element.bestXwayLength, second_element.bestXwayLength);
+                        subsidiary_object.SymbolWayLen =
+                                max(first_element.SymbolWayLen, second_element.SymbolWayLen);
 
                         subsidiary_object.exit_cycle =
                                 max(first_element.exit_cycle, second_element.exit_cycle);
@@ -107,6 +107,7 @@ public:
                         if (S.empty()){
                             cout << "ERROR_INVALID_EXPRESSION";
                             return;
+
                         } else {
                             Parsing_Tree top_element(1);
 
@@ -115,24 +116,23 @@ public:
 
                             subsidiary_object.exit_cycle = top_element.exit_cycle;
 
-                            subsidiary_object.bestPrefixLen = top_element.bestPrefixLen;
+                            subsidiary_object.PrefixLen = top_element.PrefixLen;
 
                             subsidiary_object.epsilon = true;
 
-                            subsidiary_object.bestSuffixLen = top_element.bestSuffixLen;
+                            subsidiary_object.SuffixLen = top_element.SuffixLen;
 
-                            subsidiary_object.bestXwayLength = top_element.bestXwayLength;
+                            subsidiary_object.SymbolWayLen = top_element.SymbolWayLen;
 
-                            subsidiary_object.bestSubstringLen =
-                                    max(top_element.bestXwayLength,
-                                        max(top_element.bestSubstringLen, subsidiary_object.bestPrefixLen +
-                                                                          subsidiary_object.bestSuffixLen));
+                            subsidiary_object.SubstringLen =
+                                    max(top_element.SymbolWayLen,
+                                        max(top_element.SubstringLen, subsidiary_object.PrefixLen +
+                                                                          subsidiary_object.SuffixLen));
 
-                            if (top_element.bestXwayLength)
+                            if (top_element.SymbolWayLen)
                                 subsidiary_object.exit_cycle = true;
 
                             ++counter;
-//                            cout << counter;
                             S.push(subsidiary_object);
                         }
                     }
@@ -157,40 +157,40 @@ public:
                         subsidiary_object.exit_cycle =
                                 first_operand.exit_cycle || second_operand.exit_cycle;
 
-                        subsidiary_object.bestXwayLength =
-                                (0 == second_operand.bestXwayLength * first_operand.bestXwayLength)
-                                ? 0 : (second_operand.bestXwayLength + first_operand.bestXwayLength);
+                        subsidiary_object.SymbolWayLen =
+                                (second_operand.SymbolWayLen * first_operand.SymbolWayLen == 0)
+                                ? 0 : (second_operand.SymbolWayLen + first_operand.SymbolWayLen);
 
-                        subsidiary_object.bestPrefixLen =
-                                std::max(first_operand.bestPrefixLen, (first_operand.bestXwayLength == 0)
-                                                                      ? 0 : (first_operand.bestXwayLength + second_operand.bestPrefixLen));
+                        subsidiary_object.PrefixLen =
+                                std::max(first_operand.PrefixLen, (first_operand.SymbolWayLen == 0)
+                                                                      ? 0 : (first_operand.SymbolWayLen + second_operand.PrefixLen));
 
-                        subsidiary_object.bestSuffixLen =
-                                std::max(second_operand.bestSuffixLen, (second_operand.bestXwayLength == 0)
-                                                                       ? 0 : (first_operand.bestSuffixLen + second_operand.bestXwayLength));
+                        subsidiary_object.SuffixLen =
+                                std::max(second_operand.SuffixLen, (second_operand.SymbolWayLen == 0)
+                                                                       ? 0 : (first_operand.SuffixLen + second_operand.SymbolWayLen));
 
                         if (first_operand.epsilon) {
-                            subsidiary_object.bestPrefixLen =
-                                    std::max(subsidiary_object.bestPrefixLen, second_operand.bestPrefixLen);
+                            subsidiary_object.PrefixLen =
+                                    std::max(subsidiary_object.PrefixLen, second_operand.PrefixLen);
 
-                            subsidiary_object.bestXwayLength =
-                                    std::max(subsidiary_object.bestXwayLength, second_operand.bestXwayLength);
+                            subsidiary_object.SymbolWayLen =
+                                    std::max(subsidiary_object.SymbolWayLen, second_operand.SymbolWayLen);
                         }
                         if (second_operand.epsilon) {
-                            subsidiary_object.bestSuffixLen =
-                                    std::max(subsidiary_object.bestSuffixLen, first_operand.bestSuffixLen);
+                            subsidiary_object.SuffixLen =
+                                    std::max(subsidiary_object.SuffixLen, first_operand.SuffixLen);
 
-                            subsidiary_object.bestXwayLength =
-                                    std::max(subsidiary_object.bestXwayLength, first_operand.bestXwayLength);
+                            subsidiary_object.SymbolWayLen =
+                                    std::max(subsidiary_object.SymbolWayLen, first_operand.SymbolWayLen);
                         }
 
                         subsidiary_object.epsilon =
-                                second_operand.bestXwayLength * first_operand.bestXwayLength != 0;
+                                second_operand.SymbolWayLen * first_operand.SymbolWayLen != 0;
 
-                        subsidiary_object.bestSubstringLen =
-                                max(max(subsidiary_object.bestPrefixLen, subsidiary_object.bestSuffixLen),
-                                    max(max(first_operand.bestSubstringLen, second_operand.bestSubstringLen),
-                                        first_operand.bestSuffixLen + second_operand.bestPrefixLen));
+                        subsidiary_object.SubstringLen =
+                                max(max(subsidiary_object.PrefixLen, subsidiary_object.SuffixLen),
+                                    max(max(first_operand.SubstringLen, second_operand.SubstringLen),
+                                        first_operand.SuffixLen + second_operand.PrefixLen));
 
                         ++counter;
                         S.push(subsidiary_object);
@@ -209,8 +209,8 @@ public:
             if (subsidiary_object.exit_cycle){
                 cout << k;
                 return;
-            } if (subsidiary_object.bestSubstringLen >= k) {
-                cout << subsidiary_object.bestSubstringLen;
+            } if (subsidiary_object.SubstringLen >= k) {
+                cout << subsidiary_object.SubstringLen << '\n';
                 return;
             } else {
                 cout << "INF";
