@@ -4,6 +4,7 @@ Practices 3d semester
 Даны α, буква x и натуральное число k. Вывести длину кратчайшего слова из языка L, содержащего префикс x^k.
 
 Создаются классы CurrentSituation & Parser
+
 В стеке лежат объекты типа CurrentSituation
 
 В CurrentSituation:
