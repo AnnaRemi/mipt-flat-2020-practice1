@@ -1,232 +1,213 @@
-#include<iostream>
-#include<algorithm>
-#include<stack>
+#include <string>
+#include <stack>
+#include <vector>
+#include <iostream>
 
+using std::cin;
+using std::cout;
+using std::count;
+using std::min;
+using std::exception;
+using std::vector;
+using std::pair;
 using std::stack;
 using std::string;
-using std::cout;
-using std::cin;
-using std::endl;
-using std::max;
 
-/* this class is a tree-like structure including different conditions where each node complies
-* some subword of language(reg_ex)
-*exit_cycle - if we have substring form x* and we actually have x^k as a substring
-*epsilon - is empty way
-*/
+typedef unsigned long long ulong;
 
-class Parsing_Tree {
-private:
-    bool exit_cycle;
-    bool epsilon;
-    int PrefixLen;
-    int SuffixLen;
-    int SymbolWayLen;
-    int SubstringLen;
+static const char alphabet [] = {'a', 'b', 'c', '1'};
+static const char operations [] = {'.', '*', '+'};
+static const char unary_operator [] = {'*'};
+static const char epsilon = '1';
+
+const size_t INF = 1000*1000*1000;
+
+class CurrentSituation {
 public:
-    explicit Parsing_Tree(int a) {
-        exit_cycle = epsilon = PrefixLen = SymbolWayLen = SuffixLen = SubstringLen = 0;
-    }
+    ulong MinLen = 0;
+    vector<ulong> MinLenPrefix;
 
-    void reload(int a) {
-        exit_cycle = epsilon = PrefixLen = SuffixLen = SymbolWayLen = SubstringLen = a;
-    }
+    CurrentSituation(ulong min_word_length,  ulong degree): MinLen(min_word_length),
+                                                            MinLenPrefix(degree + 1, INF) {}
+    CurrentSituation() = default;
 
-/*
-*In "parse" function we iterate the input expression.
-*If the symbol met in line is letter, we increment all field structures,
-*as well as prefix, suffix, and subword consisting of letters.
-*If we met '1' - we increment the flag with an empty word and put a structure with information about the letter in the stack
-*We also have ancillary functions which helps us to parse operators
-*/
-
-
-    static void parse(const string& reg_ex, char x, unsigned int k, stack<Parsing_Tree> S) {
-        int counter = 0;
-        for (char i : reg_ex) {
-
-            if (!(i == '.' || i == '*' || i == '+'
-                  || i == 'a' || i == 'b' || i == 'c')) {
-                cout <<  "ERROR_WRONG_SYMBOLS";
-                return;
-            }
-
-            if (isalpha(i) != 0) {
-                Parsing_Tree Buffer(1);
-
-                if (i == x) {
-                    Buffer.reload(1);
-                    Buffer.epsilon = false;
-                    Buffer.exit_cycle = false;
-                }
-
-                S.push(Buffer);
-            } else if (i == '+' || i == '*' || i == '.') {
-                    if (i == '+') {
-                        Parsing_Tree subsidiary_object(1);
-
-                        if (S.size() < 2){
-                            cout << "ERROR_INVALID_EXPRESSION";
-                            return;
-                        }
-
-                        Parsing_Tree second_element(1);
-
-                        second_element = S.top();
-                        S.pop();
-
-                        Parsing_Tree first_element(1);
-
-                        first_element = S.top();
-                        S.pop();
-
-                        subsidiary_object.SubstringLen =
-                                max(first_element.SubstringLen, second_element.SubstringLen);
-
-                        subsidiary_object.SuffixLen =
-                                max(first_element.SuffixLen, second_element.SuffixLen);
-
-                        subsidiary_object.PrefixLen =
-                                max(first_element.PrefixLen, second_element.PrefixLen);
-
-                        subsidiary_object.SymbolWayLen =
-                                max(first_element.SymbolWayLen, second_element.SymbolWayLen);
-
-                        subsidiary_object.exit_cycle =
-                                max(first_element.exit_cycle, second_element.exit_cycle);
-
-                        subsidiary_object.epsilon =
-                                max(first_element.epsilon, second_element.epsilon);
-
-                        S.push(subsidiary_object);
-                    }
-
-                    if (i == '*') {
-                        Parsing_Tree subsidiary_object(1);
-
-                        if (S.empty()){
-                            cout << "ERROR_INVALID_EXPRESSION";
-                            return;
-
-                        } else {
-                            Parsing_Tree top_element(1);
-
-                            top_element = S.top();
-                            S.pop();
-
-                            subsidiary_object.exit_cycle = top_element.exit_cycle;
-
-                            subsidiary_object.PrefixLen = top_element.PrefixLen;
-
-                            subsidiary_object.epsilon = true;
-
-                            subsidiary_object.SuffixLen = top_element.SuffixLen;
-
-                            subsidiary_object.SymbolWayLen = top_element.SymbolWayLen;
-
-                            subsidiary_object.SubstringLen =
-                                    max(top_element.SymbolWayLen,
-                                        max(top_element.SubstringLen, subsidiary_object.PrefixLen +
-                                                                          subsidiary_object.SuffixLen));
-
-                            if (top_element.SymbolWayLen)
-                                subsidiary_object.exit_cycle = true;
-
-                            ++counter;
-                            S.push(subsidiary_object);
-                        }
-                    }
-                    if (i == '.') {
-                        if (S.size() < 2){
-                            cout << "ERROR_INVALID_EXPRESSION";
-                            return;
-                        }
-
-                        Parsing_Tree second_operand(1);
-
-                        second_operand = S.top();
-                        S.pop();
-
-                        Parsing_Tree first_operand(1);
-
-                        first_operand = S.top();
-                        S.pop();
-
-                        Parsing_Tree subsidiary_object(1);
-
-                        subsidiary_object.exit_cycle =
-                                first_operand.exit_cycle || second_operand.exit_cycle;
-
-                        subsidiary_object.SymbolWayLen =
-                                (second_operand.SymbolWayLen * first_operand.SymbolWayLen == 0)
-                                ? 0 : (second_operand.SymbolWayLen + first_operand.SymbolWayLen);
-
-                        subsidiary_object.PrefixLen =
-                                std::max(first_operand.PrefixLen, (first_operand.SymbolWayLen == 0)
-                                                                      ? 0 : (first_operand.SymbolWayLen + second_operand.PrefixLen));
-
-                        subsidiary_object.SuffixLen =
-                                std::max(second_operand.SuffixLen, (second_operand.SymbolWayLen == 0)
-                                                                       ? 0 : (first_operand.SuffixLen + second_operand.SymbolWayLen));
-
-                        if (first_operand.epsilon) {
-                            subsidiary_object.PrefixLen =
-                                    std::max(subsidiary_object.PrefixLen, second_operand.PrefixLen);
-
-                            subsidiary_object.SymbolWayLen =
-                                    std::max(subsidiary_object.SymbolWayLen, second_operand.SymbolWayLen);
-                        }
-                        if (second_operand.epsilon) {
-                            subsidiary_object.SuffixLen =
-                                    std::max(subsidiary_object.SuffixLen, first_operand.SuffixLen);
-
-                            subsidiary_object.SymbolWayLen =
-                                    std::max(subsidiary_object.SymbolWayLen, first_operand.SymbolWayLen);
-                        }
-
-                        subsidiary_object.epsilon =
-                                second_operand.SymbolWayLen * first_operand.SymbolWayLen != 0;
-
-                        subsidiary_object.SubstringLen =
-                                max(max(subsidiary_object.PrefixLen, subsidiary_object.SuffixLen),
-                                    max(max(first_operand.SubstringLen, second_operand.SubstringLen),
-                                        first_operand.SuffixLen + second_operand.PrefixLen));
-
-                        ++counter;
-                        S.push(subsidiary_object);
-                    }
-
-                }
-
-        }
-        if (S.empty()) {
-            cout << "ERROR_INVALID_EXPRESSION";
-            return;
-        } else {
-            Parsing_Tree subsidiary_object(1);
-
-            subsidiary_object = S.top();
-            if (subsidiary_object.exit_cycle){
-                cout << k;
-                return;
-            } if (subsidiary_object.SubstringLen >= k) {
-                cout << subsidiary_object.SubstringLen << '\n';
-                return;
-            } else {
-                cout << "INF";
-                return;
-            }
-        }
-    }
+    CurrentSituation(const CurrentSituation&) = default;
+    CurrentSituation& operator=(const CurrentSituation&) = default;
+    CurrentSituation operator*(const CurrentSituation & other);
+    CurrentSituation operator+(const CurrentSituation & other);
+    void StarFunc();
+    ulong &operator[](size_t ind);
 };
 
-int main() {
-    stack<Parsing_Tree> S;
-    string reg_ex;
-    unsigned int k;
-    char x;
-    cin >> reg_ex >> x >> k;
-    Parsing_Tree::parse(reg_ex, x, k, S);
-    return 0;
+CurrentSituation CurrentSituation::operator+(const CurrentSituation & other) {
+    CurrentSituation result = other;
+
+    for (size_t i = 1; i < result.MinLenPrefix.size(); ++i) {
+        result.MinLenPrefix[i] =
+                std::min(MinLenPrefix[i],
+                         result.MinLenPrefix[i]);
+    }
+
+    result.MinLen = std::min(result.MinLen, MinLen);
+    return result;
 }
 
+CurrentSituation CurrentSituation::operator*(const CurrentSituation & other) {
+    CurrentSituation result = other;
+    result.MinLen += MinLen;
+
+    for (ulong& length : result.MinLenPrefix) {
+        if (length != INF)
+            length += MinLen;
+    }
+
+    for (size_t i = 1; i < MinLenPrefix.size(); ++i) {
+        if (MinLenPrefix[i] == i) {
+            for (size_t j = 1; i + j < other.MinLenPrefix.size() ; ++j) {
+                if (i != INF && other.MinLenPrefix[j] != INF) {
+                    result.MinLenPrefix[i + j] =
+                            std::min(result.MinLenPrefix[i + j],
+                                     i + other.MinLenPrefix[j]);
+                }
+
+            }
+        }
+    }
+    return result;
+}
+
+void CurrentSituation::StarFunc() {
+    MinLen = 0;
+
+    for (size_t i = 1; i < MinLenPrefix.size(); ++i) {
+        if (MinLenPrefix[i] == i)
+            for (size_t j = i; j < MinLenPrefix.size(); j += i)
+                MinLenPrefix[j] = j;
+    }
+
+    size_t k = MinLenPrefix.size();
+    vector<size_t> cost(k, INF);
+    for (size_t i = 0; i < k; ++i)
+        if (MinLenPrefix[i] == i)
+            cost[i] = i;
+
+    vector<vector<ulong>> dp(k, vector<ulong>(k, INF));
+    for (size_t i = 0; i < k; ++i)
+        dp[i][0] = 0;
+
+    for (size_t i = 1; i < k; ++i) {
+        for (size_t j = 1; j < k; ++j) {
+            if (j <= i && dp[i - 1][j - i] != INF && cost[i] != INF)
+                dp[i][j] = std::min(dp[i - 1][j], dp[i - 1][j - i] + cost[i]);
+            else
+                dp[i][j] = dp[i - 1][j];
+        }
+    }
+
+    for (size_t i = 0; i < k; ++i)
+        MinLenPrefix[i] = std::min(dp[k - 1][i], MinLenPrefix[i]);
+}
+
+ulong& CurrentSituation::operator[](size_t ind) {
+    return MinLenPrefix[ind];
+}
+
+
+class SomethingWentWrong : public exception {
+public:
+    string error;
+    explicit SomethingWentWrong(string error) : error(std::move(error)) {}
+
+    const char * what() const noexcept override {
+        return error.c_str(); }
+};
+
+
+class Parser {
+public:
+    string regexp_;
+
+    static CurrentSituation GetOperationResult(stack<CurrentSituation>& st, char operator_symbol) ;
+    explicit Parser(std::string_view regexp) : regexp_(regexp) {}
+    ulong FindAnswer(char letter_to_find, ulong degree) const;
+
+};
+
+CurrentSituation Parser::GetOperationResult(stack<CurrentSituation>& st, char operator_symbol) {
+    CurrentSituation result;
+    size_t operator_valence = (count(std::begin(unary_operator), std::end(unary_operator), operator_symbol)) ? 1 : 2;
+
+    if (st.size() < operator_valence)  {
+        throw SomethingWentWrong("Invalid regexp");
+
+    }else {
+        if (operator_symbol == '+') {
+            CurrentSituation rhs = st.top();
+            st.pop();
+            CurrentSituation lhs = st.top();
+            st.pop();
+
+            result = lhs + rhs;
+
+        }else if (operator_symbol == '.') {
+            CurrentSituation rhs = st.top();
+            st.pop();
+            CurrentSituation lhs = st.top();
+            st.pop();
+
+            result = lhs * rhs;
+
+        }else if (operator_symbol == '*') {
+            result = st.top();
+            st.pop();
+
+            result.StarFunc();
+        }
+    }
+    return result;
+}
+
+ulong Parser::FindAnswer(char letter_to_find, ulong degree) const {
+    stack<CurrentSituation> regexp_processing;
+
+    for (char symbol : regexp_) {
+
+        if (count(std::begin(alphabet), std::end(alphabet), symbol) != 0) { //if the symbol is a letter
+            regexp_processing.emplace(((symbol == epsilon) ? 0 : 1), degree);
+
+            if (symbol == letter_to_find)
+                regexp_processing.top()[1] = 1;
+
+        } else if (count(std::begin(operations), std::end(operations), symbol) != 0) { //if the symbol is an operator
+            regexp_processing.push(GetOperationResult(regexp_processing, symbol));
+        } else
+            throw SomethingWentWrong("Symbol is not in the alphabet");
+    }
+
+    if (regexp_processing.size() > 1)
+        throw SomethingWentWrong("Invalid regexp");
+
+    return regexp_processing.top()[degree];
+}
+
+int main() {
+    string regexp;
+    char letter_to_find;
+    ulong degree;
+
+    cin >> regexp >> letter_to_find >> degree;
+
+    Parser regexp_machine(regexp);
+    try {
+        size_t result =
+                regexp_machine.FindAnswer(letter_to_find, degree);
+
+        if (result == INF)
+            cout << "INF";
+        else
+            cout << result;
+
+    } catch (exception& err) {
+        cout << err.what();
+    }
+}
