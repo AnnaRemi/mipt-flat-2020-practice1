@@ -7,8 +7,10 @@ Practices 3d semester
 В стеке лежат объекты типа CurrentSituation
 
 В CurrentSituation:
-  MinLen - длина минимального слова в текущем состоянии
-  MinLenPrefix - массив длины k, где в MinLenPrefix[i] хранится длина минимального слова, которое начинается на x^i; если такового не нашлось, то INF
+  
+MinLen - длина минимального слова в текущем состоянии
+  
+MinLenPrefix - массив длины k, где в MinLenPrefix[i] хранится длина минимального слова, которое начинается на x^i; если такового не нашлось, то INF
 
 Update CurrentSituation due to:
 1. если буква, кладем в стек и MinLenPrefix[1] = 1
