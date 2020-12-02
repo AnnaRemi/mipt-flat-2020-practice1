@@ -80,32 +80,20 @@ void CurrentSituation::StarFunc() {
     MinLen = 0;
 
     for (size_t i = 1; i < MinLenPrefix.size(); ++i) {
-        if (MinLenPrefix[i] == i)
+        if (MinLenPrefix[i] == i) {
             for (size_t j = i; j < MinLenPrefix.size(); j += i)
                 MinLenPrefix[j] = j;
-    }
-
-    size_t k = MinLenPrefix.size();
-    vector<size_t> cost(k, INF);
-    for (size_t i = 0; i < k; ++i)
-        if (MinLenPrefix[i] == i)
-            cost[i] = i;
-
-    vector<vector<ulong>> dp(k, vector<ulong>(k, INF));
-    for (size_t i = 0; i < k; ++i)
-        dp[i][0] = 0;
-
-    for (size_t i = 1; i < k; ++i) {
-        for (size_t j = 1; j < k; ++j) {
-            if (j <= i && dp[i - 1][j - i] != INF && cost[i] != INF)
-                dp[i][j] = std::min(dp[i - 1][j], dp[i - 1][j - i] + cost[i]);
-            else
-                dp[i][j] = dp[i - 1][j];
         }
     }
 
-    for (size_t i = 0; i < k; ++i)
-        MinLenPrefix[i] = std::min(dp[k - 1][i], MinLenPrefix[i]);
+    for (ulong i = 1; i < MinLenPrefix.size(); ++i) {
+        if (MinLenPrefix[i] == i) {
+            for (ulong j = 1; j < MinLenPrefix.size(); ++j) {
+                size_t shift = (j % i != 0) ? 1 : 0;
+                MinLenPrefix[j] = min(MinLenPrefix[j], i * (j / i + shift));
+            }
+        }
+    }
 }
 
 ulong& CurrentSituation::operator[](size_t ind) {
