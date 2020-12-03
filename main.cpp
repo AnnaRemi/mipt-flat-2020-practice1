@@ -28,7 +28,7 @@ public:
     vector<ulong> MinLenPrefix;
 
     CurrentSituation(ulong min_word_length,  ulong degree): MinLen(min_word_length),
-                                                            MinLenPrefix(degree + 1, INF) {}
+                                                            MinLenPrefix(degree + 1, INF){}
     CurrentSituation() = default;
 
     CurrentSituation(const CurrentSituation&) = default;
@@ -43,9 +43,7 @@ CurrentSituation CurrentSituation::operator+(const CurrentSituation & other) {
     CurrentSituation result = other;
 
     for (size_t i = 1; i < result.MinLenPrefix.size(); ++i) {
-        result.MinLenPrefix[i] =
-                std::min(MinLenPrefix[i],
-                         result.MinLenPrefix[i]);
+        result.MinLenPrefix[i] = min(MinLenPrefix[i], result.MinLenPrefix[i]);
     }
 
     result.MinLen = std::min(result.MinLen, MinLen);
@@ -53,23 +51,20 @@ CurrentSituation CurrentSituation::operator+(const CurrentSituation & other) {
 }
 
 CurrentSituation CurrentSituation::operator*(const CurrentSituation & other) {
-    CurrentSituation result = other;
-    result.MinLen += MinLen;
+    CurrentSituation result = *this;
+    result.MinLen += other.MinLen;
 
     for (ulong& length : result.MinLenPrefix) {
         if (length != INF)
-            length += MinLen;
+            length += other.MinLen;
     }
 
     for (size_t i = 1; i < MinLenPrefix.size(); ++i) {
         if (MinLenPrefix[i] == i) {
             for (size_t j = 1; i + j < other.MinLenPrefix.size() ; ++j) {
-                if (i != INF && other.MinLenPrefix[j] != INF) {
-                    result.MinLenPrefix[i + j] =
-                            std::min(result.MinLenPrefix[i + j],
-                                     i + other.MinLenPrefix[j]);
+                if (i != INF && other.MinLenPrefix[j] != INF){
+                    result.MinLenPrefix[i + j] = min(result.MinLenPrefix[i + j], i + other.MinLenPrefix[j]);
                 }
-
             }
         }
     }
